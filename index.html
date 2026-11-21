@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Country Explorer</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased">
+
+  <!-- ===== NAVIGATION BAR ===== -->
+  <nav class="sticky top-0 z-30 bg-slate-900/95 text-white shadow-lg backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <a href="#home" class="flex items-center gap-2 text-lg font-extrabold">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-amber-400 text-slate-900">&#9679;</span>
+        Country Explorer
+      </a>
+      <ul class="hidden items-center gap-1 md:flex">
+        <li><a href="#home" class="rounded-lg px-4 py-2 font-semibold transition hover:bg-white/10">Home</a></li>
+        <li><a href="#explore" class="rounded-lg px-4 py-2 font-semibold transition hover:bg-white/10">Explore</a></li>
+        <li>
+          <a href="#saved" class="flex items-center gap-2 rounded-lg px-4 py-2 font-semibold transition hover:bg-white/10">
+            Saved <span id="nav-saved" class="rounded-full bg-amber-400 px-2 text-xs font-extrabold text-slate-900">0</span>
+          </a>
+        </li>
+      </ul>
+      <button id="menu-btn" type="button" aria-label="Toggle menu" aria-expanded="false"
+              class="rounded-lg p-2 text-2xl leading-none transition hover:bg-white/10 md:hidden">&#9776;</button>
+    </div>
+    <ul id="mobile-menu" class="hidden border-t border-white/10 px-4 pb-3 md:hidden">
+      <li><a href="#home" class="block rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Home</a></li>
+      <li><a href="#explore" class="block rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Explore</a></li>
+      <li><a href="#saved" class="block rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Saved (<span id="nav-saved-m">0</span>)</a></li>
+    </ul>
+  </nav>
+
+  <!-- ===== SECTION 1: HOME / HERO ===== -->
+  <header id="home" class="scroll-mt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 px-4 py-16 text-white sm:py-24">
+    <div class="mx-auto max-w-6xl">
+      <h1 class="max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">Explore every country on Earth.</h1>
+      <p class="mt-4 max-w-xl text-lg text-slate-300">Search by name, filter by region, sort by population, and save the places you want to visit.</p>
+      <div class="mt-8 flex flex-wrap gap-8">
+        <div><p id="stat-total" class="text-3xl font-extrabold">-</p><p class="text-sm text-slate-400">Countries loaded</p></div>
+        <div><p id="stat-shown" class="text-3xl font-extrabold">-</p><p class="text-sm text-slate-400">Matching your search</p></div>
+        <div><p id="stat-saved" class="text-3xl font-extrabold">0</p><p class="text-sm text-slate-400">Saved by you</p></div>
+      </div>
+      <a href="#explore" class="mt-8 inline-block rounded-xl bg-amber-400 px-6 py-3 font-bold text-slate-900 shadow transition hover:scale-105 hover:bg-amber-300">Start exploring</a>
+    </div>
+  </header>
+
+  <!-- ===== SECTION 2: EXPLORE ===== -->
+  <main id="explore" class="mx-auto max-w-6xl scroll-mt-16 px-4 py-12">
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-2">
+      <h2 class="text-3xl font-extrabold">Explore countries</h2>
+      <span id="count" class="text-sm text-slate-500"></span>
+    </div>
+
+    <div class="mb-6 grid gap-3 rounded-2xl bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto]">
+      <input id="search" type="search" placeholder="Search by country name" aria-label="Search by country name"
+             class="rounded-xl border border-slate-200 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:col-span-2 lg:col-span-1">
+      <select id="region" aria-label="Filter by region" class="rounded-xl border border-slate-200 bg-white px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+        <option value="all">All regions</option>
+        <option>Africa</option><option>Americas</option><option>Antarctic</option>
+        <option>Asia</option><option>Europe</option><option>Oceania</option>
+      </select>
+      <select id="sort" aria-label="Sort countries" class="rounded-xl border border-slate-200 bg-white px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+        <option value="name">Name A-Z</option>
+        <option value="pop-desc">Population high-low</option>
+        <option value="pop-asc">Population low-high</option>
+      </select>
+      <button id="reset" type="button" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold transition hover:border-blue-500 hover:text-blue-600">Reset</button>
+    </div>
+
+    <p id="status" role="status" aria-live="polite" class="mb-4 hidden font-semibold"></p>
+    <section id="results" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Countries"></section>
+  </main>
+
+  <!-- ===== SECTION 3: SAVED ===== -->
+  <section id="saved" class="scroll-mt-16 border-t border-slate-200 bg-white px-4 py-12">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h2 class="text-3xl font-extrabold">Saved countries <span id="saved-badge" class="ml-2 rounded-full bg-amber-400 px-3 py-0.5 align-middle text-sm font-extrabold text-slate-900">0</span></h2>
+        <button id="clear-saved" type="button" class="font-semibold text-red-600 hover:underline">Clear all</button>
+      </div>
+      <p id="saved-empty" class="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-slate-500">Nothing saved yet. Press Save on a country to add it here.</p>
+      <ul id="saved-list" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"></ul>
+    </div>
+  </section>
+
+  <footer class="bg-slate-900 px-4 py-8 text-center text-sm text-slate-400">
+    Data from the REST Countries API (v5). Your saved list is stored in this browser only.
+  </footer>
+
+  <script>
+    // ---------- Setup ----------
+    // Paste your REST Countries key below. Add localhost, 127.0.0.1 and your deployed hostname
+    // to the key's allowed origins at https://restcountries.com/api-keys
+    const API_KEY = "rc_live_d833f15c2d1b4f35b0fc3a88a2132a56";
+    const API_BASE = "https://api.restcountries.com/countries/v5";
+    const FIELDS = "names.common,codes.alpha_3,capitals,region,population,flag.url_png";
+    const PAGE_SIZE = 100; // free plan maximum per request
+    const STORAGE_KEY = "country-explorer-saved";
+    const CACHE_KEY = "country-explorer-cache";
+    const CACHE_HOURS = 24;
+    const IS_DEMO = API_KEY === "rc_live_demo";
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      search: $("search"), region: $("region"), sort: $("sort"), reset: $("reset"),
+      status: $("status"), count: $("count"), results: $("results"),
+      savedList: $("saved-list"), savedEmpty: $("saved-empty"), savedBadge: $("saved-badge"),
+      clearSaved: $("clear-saved"), statTotal: $("stat-total"), statShown: $("stat-shown"),
+      statSaved: $("stat-saved"), navSaved: $("nav-saved"), navSavedM: $("nav-saved-m"),
+      menuBtn: $("menu-btn"), mobileMenu: $("mobile-menu"),
+    };
+
+    // State: request status is kept separate from the data
+    let allCountries = [];   // original fetched data, never mutated
+    let status = "loading";  // "loading" | "error" | "success"
+    let errorMessage = "";
+    let saved = readSaved();
+
+    // ---------- localStorage ----------
+    function readSaved() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? [];
+        return Array.isArray(data) ? data.filter((item) => item?.cca3) : [];
+      } catch {
+        return []; // malformed JSON -> start with an empty list
+      }
+    }
+    const writeSaved = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+
+    // ---------- Helpers ----------
+    const formatNumber = (n) => (n ?? 0).toLocaleString("en-US");
+    const show = (el, visible) => el.classList.toggle("hidden", !visible);
+    const escapeHTML = (text) =>
+      String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    // ---------- Cache (saves API requests: the free plan has a monthly limit) ----------
+    function readCache() {
+      try {
+        const cache = JSON.parse(localStorage.getItem(CACHE_KEY));
+        const fresh = cache && Date.now() - cache.time < CACHE_HOURS * 3600 * 1000;
+        return fresh && Array.isArray(cache.data) && cache.data.length > 0 ? cache.data : null;
+      } catch {
+        return null;
+      }
+    }
+    function writeCache(data) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data }));
+      } catch { /* storage full: ignore */ }
+    }
+
+    // ---------- Fetch ----------
+    // Convert one v5 country object into the simple shape used by the rest of the app
+    const normalize = ({ names, codes, capitals, region, population, flag }) => ({
+      cca3: codes?.alpha_3 ?? "",
+      name: { common: names?.common ?? "Unknown" },
+      flags: { png: flag?.url_png ?? "" },
+      capital: (capitals ?? []).map((c) => c?.name).filter(Boolean),
+      region: region ?? "",
+      population: population ?? 0,
+    });
+
+    // The free plan returns max 100 countries per request, so we load page by page
+    async function fetchAllCountries() {
+      const all = [];
+      let offset = 0;
+      while (true) {
+        const url = `${API_BASE}?response_fields=${FIELDS}&limit=${PAGE_SIZE}&offset=${offset}`;
+        const response = await fetch(url, { headers: { Authorization: `Bearer ${API_KEY}` } });
+        if (response.status === 401) throw new Error("Your API key is missing or invalid.");
+        if (response.status === 403) throw new Error("Monthly request limit reached, or this key is not allowed.");
+        if (response.status === 429) throw new Error("Too many requests. Wait a few seconds and try again.");
+        if (!response.ok) throw new Error(`Request failed (${response.status}).`);
+        const { data } = await response.json();
+        const objects = data?.objects ?? [];
+        all.push(...objects.map(normalize));
+        if (!data?.meta?.more || objects.length === 0) break;
+        offset += PAGE_SIZE;
+      }
+      return all.filter((country) => country.cca3);
+    }
+
+    async function loadCountries(forceRefresh = false) {
+      status = "loading";
+      render();
+      const cached = forceRefresh ? null : readCache();
+      if (cached) {
+        allCountries = cached;
+        status = "success";
+        render();
+        return;
+      }
+      try {
+        allCountries = await fetchAllCountries();
+        if (allCountries.length === 0) throw new Error("The API returned no countries.");
+        if (!IS_DEMO) writeCache(allCountries);
+        status = "success";
+      } catch (error) {
+        console.error(error);
+        errorMessage = error instanceof TypeError
+          ? "The request was blocked. Add this site's address to your API key's allowed origins, and open the page with Live Server or your deployed link (not by double-clicking the file)."
+          : error.message;
+        status = "error";
+      }
+      render();
+    }
+
+    // ---------- Derive visible list (works on a copy) ----------
+    function getVisibleCountries() {
+      const query = els.search.value.trim().toLowerCase();
+      const region = els.region.value;
+
+      const filtered = allCountries.filter(({ name, region: r }) =>
+        (region === "all" || r === region) &&
+        (name?.common ?? "").toLowerCase().includes(query)
+      );
+
+      const sorted = [...filtered]; // copy before sorting
+      const sortBy = els.sort.value;
+      if (sortBy === "pop-desc") sorted.sort((a, b) => b.population - a.population);
+      else if (sortBy === "pop-asc") sorted.sort((a, b) => a.population - b.population);
+      else sorted.sort((a, b) => a.name.common.localeCompare(b.name.common));
+      return sorted;
+    }
+
+    // ---------- Render ----------
+    function renderCard(country) {
+      const { name, flags, capital, population, region, cca3 } = country;
+      const isSaved = saved.some((item) => item.cca3 === cca3);
+      return `
+        <article class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow transition duration-200 hover:-translate-y-1 hover:shadow-xl">
+          <div class="relative aspect-[16/10] bg-slate-200">
+            <img src="${escapeHTML(flags?.png ?? "")}" alt="Flag of ${escapeHTML(name.common)}" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute bottom-2 left-2 rounded-full bg-slate-900/85 px-3 py-0.5 text-xs font-bold text-white">${escapeHTML(region || "N/A")}</span>
+          </div>
+          <div class="flex flex-1 flex-col gap-3 p-4">
+            <h3 class="text-lg font-bold leading-snug">${escapeHTML(name.common)}</h3>
+            <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+              <dt class="text-slate-500">Capital</dt><dd class="text-right font-semibold">${escapeHTML(capital?.[0] ?? "N/A")}</dd>
+              <dt class="text-slate-500">Population</dt><dd class="text-right font-semibold">${formatNumber(population)}</dd>
+            </dl>
+            <button type="button" data-save="${cca3}" ${isSaved ? "disabled" : ""}
+              class="mt-auto w-full rounded-xl py-2.5 font-bold transition ${isSaved ? "cursor-default bg-blue-50 text-blue-700" : "bg-blue-600 text-white hover:bg-blue-700"}">
+              ${isSaved ? "Saved" : "Save"}
+            </button>
+          </div>
+        </article>`;
+    }
+
+    function renderResults() {
+      show(els.status, false);
+      els.count.textContent = "";
+
+      if (status === "loading") {
+        els.statTotal.textContent = els.statShown.textContent = "-";
+        els.results.innerHTML = '<div class="h-72 animate-pulse rounded-2xl bg-slate-200"></div>'.repeat(8);
+        els.status.textContent = "Loading countries...";
+        show(els.status, true);
+        return;
+      }
+      if (status === "error") {
+        els.statTotal.textContent = els.statShown.textContent = "-";
+        els.results.innerHTML = `
+          <div class="col-span-full rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-red-700">
+            <p class="text-lg font-bold">Could not load countries.</p>
+            <p class="mt-1">${escapeHTML(errorMessage)}</p>
+            <button type="button" id="retry" class="mt-4 rounded-xl bg-blue-600 px-5 py-2.5 font-bold text-white hover:bg-blue-700">Try again</button>
+          </div>`;
+        return;
+      }
+
+      const visible = getVisibleCountries();
+      els.statTotal.textContent = formatNumber(allCountries.length);
+      els.statShown.textContent = formatNumber(visible.length);
+
+      if (visible.length === 0) {
+        els.results.innerHTML = `
+          <div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+            <p class="text-lg font-bold">No countries found.</p><p>Try a different name or region.</p>
+          </div>`;
+        return;
+      }
+      els.count.textContent = `Showing ${visible.length} of ${allCountries.length}` + (IS_DEMO ? " (demo key: sample data only)" : "");
+      els.results.innerHTML = visible.map(renderCard).join("");
+    }
+
+    function renderSaved() {
+      show(els.savedEmpty, saved.length === 0);
+      show(els.clearSaved, saved.length > 0);
+      els.savedBadge.textContent = els.statSaved.textContent =
+        els.navSaved.textContent = els.navSavedM.textContent = saved.length;
+      els.savedList.innerHTML = saved
+        .map(({ cca3, name, flag }) => `
+          <li class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 shadow-sm transition hover:shadow-md">
+            <img src="${escapeHTML(flag ?? "")}" alt="" class="h-8 w-12 rounded border border-slate-200 object-cover">
+            <span class="flex-1 font-semibold">${escapeHTML(name)}</span>
+            <button type="button" data-remove="${cca3}" aria-label="Remove ${escapeHTML(name)}"
+              class="rounded-lg px-2 text-xl leading-none text-slate-400 transition hover:bg-red-50 hover:text-red-600">&times;</button>
+          </li>`)
+        .join("");
+    }
+
+    function render() {
+      renderResults();
+      renderSaved();
+    }
+
+    // ---------- Actions ----------
+    function saveCountry(code) {
+      if (saved.some((item) => item.cca3 === code)) return; // no duplicates
+      const country = allCountries.find((c) => c.cca3 === code);
+      if (!country) return;
+      saved = [...saved, { cca3: code, name: country.name.common, flag: country.flags?.png ?? "" }];
+      writeSaved();
+      render();
+    }
+
+    function removeCountry(code) {
+      saved = saved.filter((item) => item.cca3 !== code);
+      writeSaved();
+      render();
+    }
+
+    // ---------- Events ----------
+    [els.search, els.region, els.sort].forEach((el) => el.addEventListener("input", renderResults));
+
+    els.reset.addEventListener("click", () => {
+      els.search.value = "";
+      els.region.value = "all";
+      els.sort.value = "name";
+      renderResults();
+    });
+
+    els.results.addEventListener("click", (event) => {
+      const { save } = event.target.dataset;
+      if (save) saveCountry(save);
+      if (event.target.id === "retry") loadCountries(true);
+    });
+
+    els.savedList.addEventListener("click", (event) => {
+      const { remove } = event.target.dataset;
+      if (remove) removeCountry(remove);
+    });
+
+    els.clearSaved.addEventListener("click", () => {
+      saved = [];
+      writeSaved();
+      render();
+    });
+
+    // Mobile menu: the hamburger button shows/hides the links; choosing a link closes it
+    els.menuBtn.addEventListener("click", () => {
+      const open = els.mobileMenu.classList.toggle("hidden") === false;
+      els.menuBtn.setAttribute("aria-expanded", open);
+    });
+    els.mobileMenu.addEventListener("click", (event) => {
+      if (event.target.tagName === "A") show(els.mobileMenu, false);
+    });
+
+    // ---------- Start ----------
+    loadCountries();
+  </script>
+</body>
+</html>
