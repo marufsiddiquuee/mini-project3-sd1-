@@ -2,7 +2,7 @@
 
 This is my mini project (MP3 + MP4) for CSE-2340 Software Development 1 at IIUC. It is a one-page website where you can look up countries, filter them, and save the ones you like.
 
-Live site: https://marufsiddiquuee.github.io/country-explorer/
+Live site: https://marufsiddiquuee.github.io/mini-project3-sd1-/
 
 ## What it does
 
