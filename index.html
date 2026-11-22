@@ -8,7 +8,6 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased">
 
-  <!-- ===== NAVIGATION BAR ===== -->
   <nav class="sticky top-0 z-30 bg-slate-900/95 text-white shadow-lg backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
       <a href="#home" class="flex items-center gap-2 text-lg font-extrabold">
@@ -34,7 +33,6 @@
     </ul>
   </nav>
 
-  <!-- ===== SECTION 1: HOME / HERO ===== -->
   <header id="home" class="scroll-mt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 px-4 py-16 text-white sm:py-24">
     <div class="mx-auto max-w-6xl">
       <h1 class="max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">Explore every country on Earth.</h1>
@@ -48,7 +46,6 @@
     </div>
   </header>
 
-  <!-- ===== SECTION 2: EXPLORE ===== -->
   <main id="explore" class="mx-auto max-w-6xl scroll-mt-16 px-4 py-12">
     <div class="mb-6 flex flex-wrap items-end justify-between gap-2">
       <h2 class="text-3xl font-extrabold">Explore countries</h2>
@@ -75,7 +72,6 @@
     <section id="results" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Countries"></section>
   </main>
 
-  <!-- ===== SECTION 3: SAVED ===== -->
   <section id="saved" class="scroll-mt-16 border-t border-slate-200 bg-white px-4 py-12">
     <div class="mx-auto max-w-6xl">
       <div class="mb-6 flex items-center justify-between gap-4">
@@ -92,13 +88,10 @@
   </footer>
 
   <script>
-    // ---------- Setup ----------
-    // Paste your REST Countries key below. Add localhost, 127.0.0.1 and your deployed hostname
-    // to the key's allowed origins at https://restcountries.com/api-keys
     const API_KEY = "rc_live_d833f15c2d1b4f35b0fc3a88a2132a56";
     const API_BASE = "https://api.restcountries.com/countries/v5";
     const FIELDS = "names.common,codes.alpha_3,capitals,region,population,flag.url_png";
-    const PAGE_SIZE = 100; // free plan maximum per request
+    const PAGE_SIZE = 100;
     const STORAGE_KEY = "country-explorer-saved";
     const CACHE_KEY = "country-explorer-cache";
     const CACHE_HOURS = 24;
@@ -114,30 +107,26 @@
       menuBtn: $("menu-btn"), mobileMenu: $("mobile-menu"),
     };
 
-    // State: request status is kept separate from the data
-    let allCountries = [];   // original fetched data, never mutated
-    let status = "loading";  // "loading" | "error" | "success"
+    let allCountries = [];
+    let status = "loading";
     let errorMessage = "";
     let saved = readSaved();
 
-    // ---------- localStorage ----------
     function readSaved() {
       try {
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? [];
         return Array.isArray(data) ? data.filter((item) => item?.cca3) : [];
       } catch {
-        return []; // malformed JSON -> start with an empty list
+        return [];
       }
     }
     const writeSaved = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
 
-    // ---------- Helpers ----------
     const formatNumber = (n) => (n ?? 0).toLocaleString("en-US");
     const show = (el, visible) => el.classList.toggle("hidden", !visible);
     const escapeHTML = (text) =>
       String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-    // ---------- Cache (saves API requests: the free plan has a monthly limit) ----------
     function readCache() {
       try {
         const cache = JSON.parse(localStorage.getItem(CACHE_KEY));
@@ -150,11 +139,9 @@
     function writeCache(data) {
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data }));
-      } catch { /* storage full: ignore */ }
+      } catch {}
     }
 
-    // ---------- Fetch ----------
-    // Convert one v5 country object into the simple shape used by the rest of the app
     const normalize = ({ names, codes, capitals, region, population, flag }) => ({
       cca3: codes?.alpha_3 ?? "",
       name: { common: names?.common ?? "Unknown" },
@@ -164,7 +151,6 @@
       population: population ?? 0,
     });
 
-    // The free plan returns max 100 countries per request, so we load page by page
     async function fetchAllCountries() {
       const all = [];
       let offset = 0;
@@ -209,7 +195,6 @@
       render();
     }
 
-    // ---------- Derive visible list (works on a copy) ----------
     function getVisibleCountries() {
       const query = els.search.value.trim().toLowerCase();
       const region = els.region.value;
@@ -219,7 +204,7 @@
         (name?.common ?? "").toLowerCase().includes(query)
       );
 
-      const sorted = [...filtered]; // copy before sorting
+      const sorted = [...filtered];
       const sortBy = els.sort.value;
       if (sortBy === "pop-desc") sorted.sort((a, b) => b.population - a.population);
       else if (sortBy === "pop-asc") sorted.sort((a, b) => a.population - b.population);
@@ -227,7 +212,6 @@
       return sorted;
     }
 
-    // ---------- Render ----------
     function renderCard(country) {
       const { name, flags, capital, population, region, cca3 } = country;
       const isSaved = saved.some((item) => item.cca3 === cca3);
@@ -309,9 +293,8 @@
       renderSaved();
     }
 
-    // ---------- Actions ----------
     function saveCountry(code) {
-      if (saved.some((item) => item.cca3 === code)) return; // no duplicates
+      if (saved.some((item) => item.cca3 === code)) return;
       const country = allCountries.find((c) => c.cca3 === code);
       if (!country) return;
       saved = [...saved, { cca3: code, name: country.name.common, flag: country.flags?.png ?? "" }];
@@ -325,7 +308,6 @@
       render();
     }
 
-    // ---------- Events ----------
     [els.search, els.region, els.sort].forEach((el) => el.addEventListener("input", renderResults));
 
     els.reset.addEventListener("click", () => {
@@ -352,7 +334,6 @@
       render();
     });
 
-    // Mobile menu: the hamburger button shows/hides the links; choosing a link closes it
     els.menuBtn.addEventListener("click", () => {
       const open = els.mobileMenu.classList.toggle("hidden") === false;
       els.menuBtn.setAttribute("aria-expanded", open);
@@ -361,7 +342,6 @@
       if (event.target.tagName === "A") show(els.mobileMenu, false);
     });
 
-    // ---------- Start ----------
     loadCountries();
   </script>
 </body>
